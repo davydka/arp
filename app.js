@@ -2,6 +2,28 @@ var midi = require('midi');
 var output = new midi.output();
 var input = new midi.input();
 
+
+var songs = [
+	//0 otters
+	[
+		[],
+		[33, 40, 45, 52],
+		[33, 38, 45, 50],
+		[33, 40, 45, 52, 57, 64],
+		[33, 38, 45, 50, 57, 62],
+		[33, 40, 45, 52, 57, 64, 69, 76],
+		[33, 38, 45, 50, 57, 62, 69, 74],
+	]
+];
+
+var clockCount = 0;
+var stepCount = 4;
+var selectedSong = 0;
+var partStep = 0;
+var selectedPart = 0;
+var part = songs[selectedSong][selectedPart];
+
+
 // INPUT 1
 for(var i=0; i < input.getPortCount(); i++){
 	console.log(input.getPortName(i));
@@ -18,34 +40,57 @@ for(var i=0; i < output.getPortCount(); i++){
 	}
 }
 
-var clockCount = 0;
-var stepCount = 0;
 input.on('message', function(deltaTime, message) {
+	// CLOCK STOP
 	if(message == 250){
 		clockCount = 0;
 	}
-	if(message == 248){
-		if(clockCount % 6 == 0){
-			clockCount = 0;
-			stepCount++;
-			
-			noteEvent(45);
 
-			/*
-			if(stepCount % 0 == 0){
-				stepCount = 0;
-				console.log('cool');
-			}
-		       */
+	// CLOCK TICK
+	if(message == 248){
+		handleClockTick();
+	}
+
+	// PGMIN
+	if(message[0] == 194){
+		//partStep = 0;
+		selectedPart = handlePgmin(message);
+		if(selectedPart >= songs[selectedSong].length){
+			selectedPart = songs[selectedSong].length-1
+		}
+		part = songs[selectedSong][selectedPart]
+
+		if(partStep >= part.length){
+			partStep = 0;
 		}
 	}
 
-	if(message[0] == 194){
-		console.log( handlePgmin(message) );
+	// CC 1
+	if(message[0] == 176){
+		selectedSong = message[2];
+		if(selectedSong >= songs.length){
+			selectedSong = songs.length - 1;
+		}
 	}
 
-	clockCount++;
 });
+
+
+var handleClockTick = function(){
+	if(clockCount % 6 == 0){
+		clockCount = 0;
+	
+		if(part.length){
+			noteEvent(part[partStep]);
+			
+			partStep++;
+			if(partStep >= part.length){
+				partStep = 0;
+			}
+		}
+	}
+	clockCount++;
+}
 
 var handlePgmin = function(message){
 	switch(message[1]){
@@ -75,6 +120,7 @@ var handlePgmin = function(message){
 			break;
 		case 5:
 			return 8;
+			break;
 		
 		/**/
 		
@@ -85,10 +131,10 @@ var handlePgmin = function(message){
 			return 10;
 			break;
 		case 10:
-			return 9;
+			return 11;
 			break;
 		case 9:
-			return 'off';
+			return 0;
 			break;
 	}
 	

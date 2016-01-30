@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "lodash": "3.10.1",
     "midi": "0.9.4",
     "nodemon": "1.8.1"
   },

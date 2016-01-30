@@ -1,13 +1,11 @@
-var _ = require('lodash');
 var midi = require('midi');
 var output = new midi.output();
 var input = new midi.input();
-var keypress = require('keypress');
 
 // INPUT 1
 for(var i=0; i < input.getPortCount(); i++){
 	console.log(input.getPortName(i));
-	if( input.getPortName(i) == 'IAC Driver Bus 1' ){
+	if( input.getPortName(i) == 'mio 20:0' ){
 		input.openPort(i);
 	}
 }
@@ -44,10 +42,3 @@ var noteEvent = function(note){
 	}, 35)
 }
 
-var stdin = process.openStdin(); 
-require('tty').setRawMode(true);    
-
-stdin.on('keypress', function (chunk, key) {
-	  process.stdout.write('Get Chunk: ' + chunk + '\n');
-	    if (key && key.ctrl && key.name == 'c') process.exit();
-});

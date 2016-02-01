@@ -1,3 +1,4 @@
+var nanoTimer = require('nanotimer');
 var midi = require('midi');
 var output = new midi.output();
 var input = new midi.input();
@@ -7,17 +8,18 @@ var songs = [
 	//0 otters
 	[
 		[],
-		[33, 40, 45, 52],
-		[33, 38, 45, 50],
-		[33, 40, 45, 52, 57, 64],
-		[33, 38, 45, 50, 57, 62],
-		[33, 40, 45, 52, 57, 64, 69, 76],
-		[33, 38, 45, 50, 57, 62, 69, 74],
+		[45, 52, 57, 64],
+		[45, 50, 57, 62],
+		[45, 52, 57, 64, 69, 76],
+		[45, 50, 57, 62, 69, 74],
+		[45, 52, 57, 64, 69, 76, 81, 88],
+		[45, 50, 57, 62, 69, 74, 81, 86],
 	]
 ];
 
+
+
 var clockCount = 0;
-var stepCount = 4;
 var selectedSong = 0;
 var partStep = 0;
 var selectedPart = 0;
@@ -53,7 +55,7 @@ input.on('message', function(deltaTime, message) {
 
 	// PGMIN
 	if(message[0] == 194){
-		//partStep = 0;
+		var oldPart = selectedPart;
 		selectedPart = handlePgmin(message);
 		if(selectedPart >= songs[selectedSong].length){
 			selectedPart = songs[selectedSong].length-1
@@ -63,6 +65,15 @@ input.on('message', function(deltaTime, message) {
 		if(partStep >= part.length){
 			partStep = 0;
 		}
+		
+		if(oldPart == 0){
+			partStep = 0;
+			var diff = process.hrtime(countTimeStamp);
+			timeOffset = '0n';
+			playNote();
+			timeOffset = diff[1]+'n';
+		}
+
 	}
 
 	// CC 1
@@ -75,21 +86,30 @@ input.on('message', function(deltaTime, message) {
 
 });
 
-
+var timer = new nanoTimer();
+var counter = 0;
+var countTimeStamp = process.hrtime();
+var timeOffset = '0n'; //nanoseconds
 var handleClockTick = function(){
 	if(clockCount % 6 == 0){
 		clockCount = 0;
-	
-		if(part.length){
-			noteEvent(part[partStep]);
-			
-			partStep++;
-			if(partStep >= part.length){
-				partStep = 0;
-			}
-		}
+		countTimeStamp = process.hrtime();
+		
+		playNote();
 	}
 	clockCount++;
+}
+var playNote = function(){
+	if(part.length){
+		timer.setTimeout(function(){
+			noteEvent(part[partStep]);
+		}, '', timeOffset);
+
+		partStep++;
+		if(partStep >= part.length){
+			partStep = 0;
+		}
+	}
 }
 
 var handlePgmin = function(message){
@@ -137,14 +157,15 @@ var handlePgmin = function(message){
 			return 0;
 			break;
 	}
-	
 }
 
 var noteEvent = function(note){
 	output.sendMessage([144,note,100]);
-
-	setTimeout(function(note){
-		output.sendMessage([128,note,0]);
-	}, 15)
+		
+	timer.setTimeout(noteOff, [note], '15m');
 }
 
+var noteOff = function(note){
+	output.sendMessage([128,note,0]);
+	output.sendMessage([144,note,0]);
+}

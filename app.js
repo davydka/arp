@@ -1,4 +1,4 @@
-var nanoTimer = require('nanotimer');
+var nanoTimer = require('./nanotimer');
 var midi = require('midi');
 var output = new midi.output();
 var input = new midi.input();
@@ -8,12 +8,12 @@ var songs = [
 	//0 otters
 	[
 		[],
-		[45, 52, 57, 64],
-		[45, 50, 57, 62],
-		[45, 52, 57, 64, 69, 76],
-		[45, 50, 57, 62, 69, 74],
-		[45, 52, 57, 64, 69, 76, 81, 88],
-		[45, 50, 57, 62, 69, 74, 81, 86],
+		[57, 64, 69, 76],
+		[57, 62, 69, 74],
+		[57, 64, 69, 76, 69, 88],
+		[57, 62, 69, 74, 69, 86],
+		[57, 64, 69, 76, 69, 88, 93, 100],
+		[57, 62, 69, 74, 69, 86, 83, 98],
 	]
 ];
 
@@ -103,12 +103,11 @@ var playNote = function(){
 	if(part.length){
 		timer.setTimeout(function(){
 			noteEvent(part[partStep]);
+			partStep++;
+			if(partStep >= part.length){
+				partStep = 0;
+			}
 		}, '', timeOffset);
-
-		partStep++;
-		if(partStep >= part.length){
-			partStep = 0;
-		}
 	}
 }
 

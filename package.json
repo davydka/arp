@@ -5,7 +5,6 @@
   "main": "index.js",
   "dependencies": {
     "midi": "0.9.4",
-    "nanotimer": "0.3.13",
     "nodemon": "1.8.1"
   },
   "devDependencies": {},

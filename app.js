@@ -88,7 +88,7 @@ input.on('message', function(deltaTime, message) {
 		handleClockTick();
 	}
 
-	// PGMIN
+	// PGMIN RC-1
 	if(message[0] == 194){
 		var oldPart = selectedPart;
 		selectedPart = handlePgmin(message);
@@ -104,19 +104,32 @@ input.on('message', function(deltaTime, message) {
 		if(oldPart == 0){
 			partStep = 0;
 			var diff = process.hrtime(countTimeStamp);
-			timeOffset = '0n';
-			playNote();
-			timeOffset = diff[1]+'n';
+			//console.log('main diff', diff[1]);
+			//if(diff[1] > 99999999){
+			if(diff[1] > tickTime*.85){
+				timeOffset = '0n';
+				//console.log('big');
+				//console.log(tickTime);
+			} else {
+				timeOffset = '0n';
+				playNote();
+				timeOffset = diff[1]+'n';
+			}
 		}
 
 	}
 
-	// CC 1
-	if(message[0] == 176){
-		selectedSong = message[2];
+	// PGMIN MIDI MOUSE - Channel 2
+	if(message[0] == 192){
+		selectedSong = message[1];
 		if(selectedSong >= songs.length){
 			selectedSong = songs.length - 1;
 		}
+	}
+
+	// CC 1
+	if(message[0] == 176){
+		//nothing right now
 	}
 
 });
@@ -124,12 +137,24 @@ input.on('message', function(deltaTime, message) {
 var timer = new nanoTimer();
 var counter = 0;
 var countTimeStamp = process.hrtime();
+var noteTimeStamp = process.hrtime();
+var tickTimeStamp = process.hrtime();
+var tickTime = 0;
 var timeOffset = '0n'; //nanoseconds
 var handleClockTick = function(){
 	if(clockCount % 6 == 0){
 		clockCount = 0;
 		countTimeStamp = process.hrtime();
-		
+
+		if(counter == 1){
+			tickTime = process.hrtime(tickTimeStamp);
+			tickTime = tickTime[1];
+			counter = 0;
+		} else {
+			tickTimeStamp = process.hrtime();
+			counter = 1;
+		}
+
 		playNote();
 	}
 	clockCount++;
@@ -137,6 +162,10 @@ var handleClockTick = function(){
 var playNote = function(){
 	if(part.length){
 		timer.setTimeout(function(){
+			noteTimeStamp = process.hrtime();
+			var diff = process.hrtime(noteTimeStamp);
+			//console.log(diff);
+
 			noteEvent(part[partStep]);
 			partStep++;
 			if(partStep >= part.length){

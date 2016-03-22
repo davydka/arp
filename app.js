@@ -58,6 +58,7 @@ var clockCount = 0;
 var selectedSong = 0;
 var partStep = 0;
 var selectedPart = 1;
+var pgminTimestap = process.hrtime();
 var part = songs[selectedSong][selectedPart];
 
 
@@ -101,7 +102,17 @@ input.on('message', function(deltaTime, message) {
 			partStep = 0;
 		}
 		
-		if(oldPart == 0){
+		if(oldPart == 0 || selectedPart == oldPart){
+
+			var pgminDiff = process.hrtime(pgminTimestap);
+			//console.log(pgminDiff);
+			if(pgminDiff[0] == 0 && pgminDiff[1] < 500000000){
+				//console.log('less');
+				timeOffset = '0n';
+				return;
+			}
+			//console.log('more');
+			pgminTimestap = process.hrtime();
 			partStep = 0;
 			var diff = process.hrtime(countTimeStamp);
 			//console.log('main diff', diff[1]);
